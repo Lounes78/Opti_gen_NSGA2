@@ -8,6 +8,18 @@ temps = data[:, 0]
 position_x = data[:, 1] 
 
 class Individu:
+
+    """
+    Classe représentant un individu dans l'algorithme génétique NSGA-II.
+
+    Attributs :
+        - x : Variables de décision (vecteur de paramètres de l'individu).
+        - objectifs : Valeurs des objectifs pour l'individu.
+        - rang : Rang de domination de l'individu (initialisé à infini).
+        - distance_de_crowding : Distance de crowding pour l'individu (pour la diversité).
+        - solutions_dominees : Liste des individus dominés par cet individu.
+        - nombre_dominations : Nombre de solutions qui dominent cet individu.
+    """
     def __init__(self, x: np.ndarray):
         self.x = x  # Variables de décision
         self.objectifs = None  # Valeurs des objectifs
@@ -20,6 +32,19 @@ class Individu:
 
 
 def nsga2(parametres_probleme, taille_pop, nb_generations, bornes):
+
+    """
+    Implémentation de l'algorithme NSGA-II pour optimiser des objectifs multi-critères.
+
+    Entrées :
+        - parametres_probleme : Dictionnaire contenant les paramètres du problème.
+        - taille_pop : Taille de la population.
+        - nb_generations : Nombre de générations à exécuter.
+        - bornes : Limites inférieures et supérieures pour les variables de décision.
+
+    Sorties :
+        - population : Liste des individus finaux après les générations.
+    """
     # Initialisation de la population et évaluation initiale
     population = initialiser_population(taille_pop, bornes)
     for individu in population:
@@ -77,6 +102,19 @@ def nsga2(parametres_probleme, taille_pop, nb_generations, bornes):
 
 
 def evaluer_individu(individu: Individu, parametres_probleme: dict):
+
+    """
+    Évalue les objectifs pour un individu donné.
+
+    Entrées :
+        - individu : Instance de la classe `Individu`.
+        - parametres_probleme : Dictionnaire contenant les paramètres du problème.
+
+    Sorties :
+        - Tuple contenant :
+            - La capacité de la batterie.
+            - La chute de tension maximale.
+    """
     capacite_batterie, seuil_puissance = individu.x
     capacite_sortie = capacite_batterie * 0.1
     capacite_entree = capacite_batterie * 0.1
@@ -111,11 +149,31 @@ def evaluer_individu(individu: Individu, parametres_probleme: dict):
 
 
 def initialiser_population(taille_pop, bornes):
+    """
+    Initialise une population aléatoire d'individus.
+
+    Entrées :
+        - taille_pop : Taille de la population à initialiser.
+        - bornes : Limites des variables de décision pour chaque individu.
+
+    Sorties :
+        - Liste d'instances de la classe `Individu`.
+    """
     return [Individu(np.array([random.uniform(bornes[i][0], bornes[i][1]) for i in range(len(bornes))])) 
             for _ in range(taille_pop)]
 
 
 def tri_non_domine_rapide(population):
+
+    """
+    Effectue un tri rapide pour identifier les fronts non dominés dans la population.
+
+    Entrées :
+        - population : Liste des individus.
+
+    Sorties :
+        - Liste de fronts non dominés (listes de `Individu`).
+    """
     fronts = [[]]
     for p in population:
         p.solutions_dominees = []
@@ -149,6 +207,12 @@ def tri_non_domine_rapide(population):
 
 
 def calculer_distance_crowding(front):
+    """
+    Calcule la distance de crowding pour chaque individu dans un front donné.
+
+    Entrées :
+        - front : Liste d'individus dans un front.
+    """
     if len(front) <= 2:
         for individu in front:
             individu.distance_de_crowding = float('inf')
@@ -173,11 +237,31 @@ def calculer_distance_crowding(front):
 
 
 def selection_par_tournoi(population, taille_tournoi):
+    """
+    Sélectionne un individu par tournoi.
+
+    Entrées :
+        - population : Liste des individus.
+        - taille_tournoi : Nombre d'individus dans le tournoi.
+
+    Sorties :
+        - Individu sélectionné.
+    """
     tournoi = random.sample(population, taille_tournoi)
     return min(tournoi, key=lambda x: (x.rang, -x.distance_de_crowding))
 
 
 def croisement(parent1, parent2, cr):
+    """
+    Effectue le croisement entre deux parents pour générer deux enfants.
+
+    Entrées :
+        - parent1, parent2 : Parents (instances de `Individu`).
+        - cr : Probabilité de croisement.
+
+    Sorties :
+        - Deux enfants (instances de `Individu`).
+    """
     if random.random() < cr:
         alpha = random.random()
         enfant1_x = alpha * parent1.x + (1 - alpha) * parent2.x
@@ -188,17 +272,34 @@ def croisement(parent1, parent2, cr):
 
 
 def mutation(individu, bornes, mr):
+    """
+    Effectue une mutation sur un individu.
+
+    Entrées :
+        - individu : Instance de `Individu`.
+        - bornes : Limites des variables de décision.
+        - mr : Probabilité de mutation.
+    """
+
     for i in range(len(individu.x)):
         if random.random() < mr:
             individu.x[i] = random.uniform(bornes[i][0], bornes[i][1])
 
 def afficher_resultats(population):
+    """
+    Affiche les résultats de l'algorithme en deux graphiques :
+        - Domaine de recherche (variables de décision).
+        - Front de Pareto (objectifs).
+
+    Entrées :
+        - population : Liste des individus finaux.
+    """
     recherche = np.array([ind.x for ind in population])
     plt.figure(figsize=(10, 6))
-    plt.scatter(recherche[:, 0], recherche[:, 1], c='blue')
+    plt.scatter(recherche[:, 0], recherche[:, 1], c='red')
     plt.xlabel('Capacité Batterie (KWh)')
     plt.ylabel('Puissance de Seuil (w)')
-    plt.title('domaine de recherche ')
+    plt.title('espaces des solutions ')
     plt.grid(True)
     plt.show()
 
@@ -207,7 +308,7 @@ def afficher_resultats(population):
     plt.figure(figsize=(10, 6))
     plt.scatter(objectifs0_KWh, objectifs[:, 1], c='blue')
     plt.xlabel('Capacité Batterie (KWh)')
-    plt.ylabel('Chute de Tension Max (V)')
-    plt.title('Front de Pareto')
+    plt.ylabel('chute de tension( V')
+    plt.title('espace des objectifs')
     plt.grid(True)
     plt.show()

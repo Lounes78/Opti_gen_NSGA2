@@ -6,14 +6,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from fonctions import gestion_puissances
 
-# from pymoo.core.problem import ElementwiseProblem
-# import numpy as np
-# from pymoo.algorithms.moo.nsga2 import NSGA2
-# from pymoo.optimize import minimize
-# import matplotlib.pyplot as plt
 
 class BatteryOptimizationProblem(ElementwiseProblem):
+    """
+    Entrées :
+        - temps : Tableau des instants de temps (en secondes).
+        - position_x : Tableau des positions du train (en mètres).
+        - Ptrain : Tableau des puissances demandées par le train (en Watts).
+        - Vsst : Tension aux bornes des sous-stations (en Volts).
+        - calculer_Req : Fonction pour calculer la résistance équivalente.
+        - Dt : Pas de temps (en secondes).
+        - gestion_puissances : Fonction pour gérer les puissances (batterie, LAC, rhéostat).
+    """
     def __init__(self, temps, position_x, Ptrain, Vsst, calculer_Req, Dt, gestion_puissances):
+        """
+        Initialisation de la classe BatteryOptimizationProblem.
+        
+        Entrées :
+            - temps, position_x, Ptrain, Vsst, calculer_Req, Dt, gestion_puissances : Voir description de la classe.
+        """
         super().__init__(
             n_var=2,
             n_obj=2,
@@ -29,6 +40,19 @@ class BatteryOptimizationProblem(ElementwiseProblem):
         self.gestion_puissances = gestion_puissances
 
     def _evaluate(self, x, out, *args, **kwargs):
+    
+        """
+        Évalue une solution candidate pour les objectifs d'optimisation.
+
+        Entrées :
+            - x : Tableau contenant les valeurs des variables de décision :
+                  - x[0] : Capacité de la batterie (en Joules).
+                  - x[1] : Puissance seuil de la LAC (en Watts).
+        Sorties :
+            - out["F"] : Valeurs des objectifs d'optimisation calculées pour la solution candidate :
+                         - [0] : Capacité de la batterie (en Joules).
+                         - [1] : Chute de tension maximale (en Volts).
+        """
         battery_capacity, P_seuil = x
         battery_output_capacity = battery_capacity * 0.1
         battery_input_capacity = battery_capacity * 0.1

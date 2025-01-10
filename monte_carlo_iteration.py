@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import numpy as np 
 
+# algorithme Monte carlo : 
 def monte_carlo_iteration(
     capacity_range,
     P_seuil_range,
@@ -12,6 +13,24 @@ def monte_carlo_iteration(
     calculer_Req,
     Dt
 ):    
+
+    """
+    Entrées :
+        - capacity_range : Intervalle des capacités de la batterie (min, max).
+        - P_seuil_range : Intervalle des puissances seuil de la LAC (min, max).
+        - gestion_puissances : Fonction pour gérer les puissances (batterie, LAC, rhéostat).
+        - temps : Tableau des instants de temps (en secondes).
+        - position_x : Tableau des positions du train (en mètres).
+        - Ptrain : Tableau des puissances demandées par le train (en Watts).
+        - Vsst : Tension aux bornes des sous-stations (en Volts).
+        - calculer_Req : Fonction pour calculer la résistance équivalente.
+        - Dt : Pas de temps (en secondes).
+    Sorties :
+        - Tuple contenant :
+            - battery_capacity : Capacité de la batterie simulée (en Joules).
+            - P_seuil : Puissance seuil simulée (en Watts).
+            - chute_de_tension_max : Chute de tension maximale (en Volts).
+    """
     
     battery_capacity = np.random.uniform(capacity_range[0], capacity_range[1])
     P_seuil = np.random.uniform(P_seuil_range[0], P_seuil_range[1])
@@ -53,6 +72,16 @@ def monte_carlo_iteration(
 
 
 def run_monte_carlo(n_iterations, capacity_range, P_seuil_range, *args):
+    """
+    Entrées :
+        - n_iterations : Nombre d'itérations à exécuter.
+        - capacity_range : Intervalle des capacités de la batterie (min, max).
+        - P_seuil_range : Intervalle des puissances seuil de la LAC (min, max).
+        - *args : Arguments supplémentaires pour la fonction `monte_carlo_iteration`.
+    Sorties :
+        - results : Liste des résultats de chaque itération Monte Carlo. Chaque élément est un tuple
+                    contenant (battery_capacity, P_seuil, chute_de_tension_max).
+    """
     results = []
     
     for _ in tqdm(range(n_iterations), desc="Monte Carlo Iterations"):
@@ -63,6 +92,14 @@ def run_monte_carlo(n_iterations, capacity_range, P_seuil_range, *args):
 
 
 def find_non_dominated_solutions(results):
+    """
+    Entrées :
+        - results : Liste des solutions obtenues (chaque élément est un tuple contenant 
+                    (battery_capacity, P_seuil, chute_de_tension_max)).
+    Sorties :
+        - non_dominated : Liste des solutions non dominées. Chaque élément est un tuple contenant
+                          (battery_capacity, P_seuil, chute_de_tension_max).
+    """
     non_dominated = []
     
     for i, sol_i in enumerate(results):
